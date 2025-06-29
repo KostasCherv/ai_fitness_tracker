@@ -1,0 +1,194 @@
+{
+	"name": "fitness_tracker",
+	"nodes": [
+		{
+			"name": "introduction",
+			"type": "conversation",
+			"isStart": true,
+			"metadata": {
+				"position": {
+					"x": 61.55706266741251,
+					"y": 1429.8341241473968
+				}
+			},
+			"prompt": "You are a fitness coach assistant helping to create personalized fitness plans. Your role is to collect information systematically and efficiently. Follow these rules:\n\n1. Ask ONE question at a time\n2. Be conversational but direct\n3. Don't repeat questions unless the user asks for clarification\n4. Confirm information before moving to the next question\n5. When you have all required information, summarize and ask for confirmation\n\nRequired information to collect:\n- Age\n- Weight\n- Any injuries or physical limitations\n- Main fitness goal (weight loss, muscle gain, endurance, etc.)\n- How many days per week they can work out\n- Current fitness level (beginner, intermediate, advanced)\n- Any dietary restrictions\n\nStart by greeting the user and asking for their age.",
+			"model": {
+				"model": "gpt-4o",
+				"provider": "openai",
+				"maxTokens": 2000,
+				"temperature": 0
+			},
+			"variableExtractionPlan": {
+				"output": [
+					{
+						"enum": [],
+						"type": "string",
+						"title": "age",
+						"description": "User's age"
+					},
+					{
+						"enum": [],
+						"type": "string",
+						"title": "weight",
+						"description": "User's weight"
+					},
+					{
+						"enum": [],
+						"type": "string",
+						"title": "injuries",
+						"description": "Any injuries or physical limitations"
+					},
+					{
+						"enum": [],
+						"type": "string",
+						"title": "fitness_goal",
+						"description": "Main fitness goal"
+					},
+					{
+						"enum": [],
+						"type": "string",
+						"title": "workout_days",
+						"description": "Number of workout days per week"
+					},
+					{
+						"enum": [],
+						"type": "string",
+						"title": "fitness_level",
+						"description": "Current fitness level"
+					},
+					{
+						"enum": [],
+						"type": "string",
+						"title": "dietary_restrictions",
+						"description": "Any dietary restrictions"
+					}
+				]
+			},
+			"messagePlan": {
+				"firstMessage": "Hello {{ full_name }}! I'm here to help you create a personalized fitness plan. Let's start by getting to know you better. What's your age?"
+			}
+		},
+		{
+			"name": "PostData",
+			"type": "tool",
+			"metadata": {
+				"position": {
+					"x": 63.917496733060915,
+					"y": 2209.141315502685
+				}
+			},
+			"tool": {
+				"url": "https://gallant-cow-580.convex.site/vapi/generate-program",
+				"body": {
+					"type": "object",
+					"required": [],
+					"properties": {
+						"age": {
+							"type": "string",
+							"value": "{{age}}",
+							"description": ""
+						},
+						"weight": {
+							"type": "string",
+							"value": "{{weight}}",
+							"description": ""
+						},
+						"user_id": {
+							"type": "string",
+							"value": "{{user_id}}",
+							"description": ""
+						},
+						"injuries": {
+							"type": "string",
+							"value": "{{injuries}}",
+							"description": ""
+						},
+						"full_name": {
+							"type": "string",
+							"value": "{{full_name}}",
+							"description": ""
+						},
+						"fitness_goal": {
+							"type": "string",
+							"value": "{{fitness_goal}}",
+							"description": ""
+						},
+						"workout_days": {
+							"type": "string",
+							"value": "{{workout_days}}",
+							"description": ""
+						},
+						"fitness_level": {
+							"type": "string",
+							"value": "{{fitness_level}}",
+							"description": ""
+						},
+						"dietary_restrictions": {
+							"type": "string",
+							"value": "{{dietary_restrictions}}",
+							"description": ""
+						}
+					}
+				},
+				"name": "Generate-program",
+				"type": "apiRequest",
+				"method": "POST",
+				"function": {
+					"name": "untitled_tool",
+					"parameters": {
+						"type": "object",
+						"required": [],
+						"properties": {}
+					}
+				}
+			}
+		},
+		{
+			"name": "hangup_1750710582241",
+			"type": "tool",
+			"metadata": {
+				"position": {
+					"x": 62.82562255859375,
+					"y": 2814.8326721191406
+				}
+			},
+			"tool": {
+				"type": "endCall",
+				"function": {
+					"name": "untitled_tool",
+					"parameters": {
+						"type": "object",
+						"required": [],
+						"properties": {}
+					}
+				},
+				"messages": [
+					{
+						"type": "request-start",
+						"content": "Perfect! I've collected all your information and I'm now creating your personalized fitness plan. You'll be redirected to your profile page where you can view your new plan. Thank you for your time!",
+						"blocking": true
+					}
+				]
+			}
+		}
+	],
+	"edges": [
+		{
+			"from": "PostData",
+			"to": "hangup_1750710582241",
+			"condition": {
+				"type": "ai",
+				"prompt": "default"
+			}
+		},
+		{
+			"from": "introduction",
+			"to": "PostData",
+			"condition": {
+				"type": "ai",
+				"prompt": "user said yes"
+			}
+		}
+	],
+	"globalPrompt": "You are a professional fitness coach assistant. Be friendly, efficient, and systematic in collecting information. Ask one question at a time and confirm each piece of information before moving to the next. Don't repeat questions unless the user asks for clarification."
+}
