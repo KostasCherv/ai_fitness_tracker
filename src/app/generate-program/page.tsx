@@ -6,6 +6,7 @@ import { vapi } from "@/lib/vapi";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { PhoneIcon, PhoneOffIcon, SparklesIcon } from "lucide-react";
 
 const GenerateProgramPage = () => {
   const [callActive, setCallActive] = useState(false);
@@ -146,13 +147,13 @@ const GenerateProgramPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen text-foreground overflow-hidden  pb-6 pt-24">
+    <div className="flex flex-col min-h-screen text-foreground overflow-hidden pb-6 pt-24">
       <div className="container mx-auto px-4 h-full max-w-5xl">
         {/* Title */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 animate-fadeIn">
           <h1 className="text-3xl font-bold font-mono">
             <span>Generate Your </span>
-            <span className="text-primary uppercase">Fitness Program</span>
+            <span className="text-primary text-glow uppercase">Fitness Program</span>
           </h1>
           <p className="text-muted-foreground mt-2">
             Have a voice conversation with our AI assistant to create your personalized plan
@@ -162,7 +163,7 @@ const GenerateProgramPage = () => {
         {/* VIDEO CALL AREA */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* AI ASSISTANT CARD */}
-          <Card className="bg-card/90 backdrop-blur-sm border border-border overflow-hidden relative">
+          <Card className="bg-card/90 backdrop-blur-sm border border-border overflow-hidden relative card-glow animate-slideInLeft">
             <div className="aspect-video flex flex-col items-center justify-center p-6 relative">
               {/* AI VOICE ANIMATION */}
               <div
@@ -170,9 +171,9 @@ const GenerateProgramPage = () => {
                   isSpeaking ? "opacity-30" : "opacity-0"
                 } transition-opacity duration-300`}
               >
-                {/* Voice wave animation when speaking */}
+                {/* Enhanced voice wave animation when speaking */}
                 <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 flex justify-center items-center h-20">
-                  {[...Array(5)].map((_, i) => (
+                  {[...Array(7)].map((_, i) => (
                     <div
                       key={i}
                       className={`mx-1 h-16 w-1 bg-primary rounded-full ${
@@ -180,7 +181,7 @@ const GenerateProgramPage = () => {
                       }`}
                       style={{
                         animationDelay: `${i * 0.1}s`,
-                        height: isSpeaking ? `${Math.random() * 50 + 20}%` : "5%",
+                        height: isSpeaking ? `${Math.random() * 60 + 20}%` : "5%",
                       }}
                     />
                   ))}
@@ -188,14 +189,14 @@ const GenerateProgramPage = () => {
               </div>
 
               {/* AI IMAGE */}
-              <div className="relative size-32 mb-4">
+              <div className="relative size-32 mb-4 animate-float">
                 <div
                   className={`absolute inset-0 bg-primary opacity-10 rounded-full blur-lg ${
-                    isSpeaking ? "animate-pulse" : ""
+                    isSpeaking ? "animate-pulse-glow" : ""
                   }`}
                 />
 
-                <div className="relative w-full h-full rounded-full bg-card flex items-center justify-center border border-border overflow-hidden">
+                <div className="relative w-full h-full rounded-full bg-card flex items-center justify-center border border-border overflow-hidden group-hover:border-primary/50 transition-colors">
                   <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-secondary/10"></div>
                   <img
                     src="/ai-avatar.png"
@@ -209,11 +210,10 @@ const GenerateProgramPage = () => {
               <p className="text-sm text-muted-foreground mt-1">Fitness & Diet Coach</p>
 
               {/* SPEAKING INDICATOR */}
-
               <div
                 className={`mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border ${
                   isSpeaking ? "border-primary" : ""
-                }`}
+                } transition-all duration-300`}
               >
                 <div
                   className={`w-2 h-2 rounded-full ${
@@ -235,15 +235,14 @@ const GenerateProgramPage = () => {
           </Card>
 
           {/* USER CARD */}
-          <Card className={`bg-card/90 backdrop-blur-sm border overflow-hidden relative`}>
+          <Card className="bg-card/90 backdrop-blur-sm border border-border overflow-hidden relative card-glow animate-slideInRight">
             <div className="aspect-video flex flex-col items-center justify-center p-6 relative">
               {/* User Image */}
               <div className="relative size-32 mb-4">
                 <img
                   src={user?.imageUrl}
                   alt="User"
-                  // ADD THIS "size-full" class to make it rounded on all images
-                  className="size-full object-cover rounded-full"
+                  className="size-full object-cover rounded-full border border-border"
                 />
               </div>
 
@@ -253,23 +252,23 @@ const GenerateProgramPage = () => {
               </p>
 
               {/* User Ready Text */}
-              <div className={`mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-card border`}>
-                <div className={`w-2 h-2 rounded-full bg-muted`} />
+              <div className="mt-4 flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border">
+                <div className="w-2 h-2 rounded-full bg-muted" />
                 <span className="text-xs text-muted-foreground">Ready</span>
               </div>
             </div>
           </Card>
         </div>
 
-        {/* MESSAGE COINTER  */}
+        {/* MESSAGE CONTAINER */}
         {messages.length > 0 && (
           <div
             ref={messageContainerRef}
-            className="w-full bg-card/90 backdrop-blur-sm border border-border rounded-xl p-4 mb-8 h-64 overflow-y-auto transition-all duration-300 scroll-smooth"
+            className="w-full bg-card/90 backdrop-blur-sm border border-border rounded-xl p-4 mb-8 h-64 overflow-y-auto transition-all duration-300 scroll-smooth card-glow animate-fadeIn"
           >
             <div className="space-y-3">
               {messages.map((msg, index) => (
-                <div key={index} className="message-item animate-fadeIn">
+                <div key={index} className="message-item animate-fadeIn" style={{ animationDelay: `${index * 0.1}s` }}>
                   <div className="font-semibold text-xs text-muted-foreground mb-1">
                     {msg.role === "assistant" ? "CodeFlex AI" : "You"}:
                   </div>
@@ -290,15 +289,15 @@ const GenerateProgramPage = () => {
         )}
 
         {/* CALL CONTROLS */}
-        <div className="w-full flex justify-center gap-4">
+        <div className="w-full flex justify-center gap-4 animate-fadeIn" style={{ animationDelay: "0.5s" }}>
           <Button
             className={`w-40 text-xl rounded-3xl ${
               callActive
                 ? "bg-destructive hover:bg-destructive/90"
                 : callEnded
                   ? "bg-green-600 hover:bg-green-700"
-                  : "bg-primary hover:bg-primary/90"
-            } text-white relative`}
+                  : "bg-gradient-primary hover:bg-primary/90"
+            } text-white relative hover-lift focus-cyber group`}
             onClick={toggleCall}
             disabled={connecting || callEnded}
           >
@@ -306,14 +305,28 @@ const GenerateProgramPage = () => {
               <span className="absolute inset-0 rounded-full animate-ping bg-primary/50 opacity-75"></span>
             )}
 
-            <span>
-              {callActive
-                ? "End Call"
-                : connecting
-                  ? "Connecting..."
-                  : callEnded
-                    ? "View Profile"
-                    : "Start Call"}
+            <span className="flex items-center gap-2">
+              {callActive ? (
+                <>
+                  <PhoneOffIcon className="h-5 w-5" />
+                  End Call
+                </>
+              ) : connecting ? (
+                <>
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  Connecting...
+                </>
+              ) : callEnded ? (
+                <>
+                  <SparklesIcon className="h-5 w-5" />
+                  View Profile
+                </>
+              ) : (
+                <>
+                  <PhoneIcon className="h-5 w-5 group-hover:animate-pulse" />
+                  Start Call
+                </>
+              )}
             </span>
           </Button>
         </div>

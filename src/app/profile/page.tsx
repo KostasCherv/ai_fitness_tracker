@@ -16,6 +16,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import LoadingSkeleton from "@/components/LoadingSkeleton";
 
 const ProfilePage = () => {
   const { user } = useUser();
@@ -30,6 +31,15 @@ const ProfilePage = () => {
     ? allPlans?.find((plan) => plan._id === selectedPlanId)
     : activePlan;
 
+  // Loading state
+  if (allPlans === undefined) {
+    return (
+      <section className="relative z-10 pt-12 pb-32 flex-grow container mx-auto px-4">
+        <LoadingSkeleton type="profile" />
+      </section>
+    );
+  }
+
   return (
     <section className="relative z-10 pt-12 pb-32 flex-grow container mx-auto px-4">
       <ProfileHeader user={user} />
@@ -37,11 +47,11 @@ const ProfilePage = () => {
       {allPlans && allPlans?.length > 0 ? (
         <div className="space-y-8">
           {/* PLAN SELECTOR */}
-          <div className="relative backdrop-blur-sm border border-border p-6">
+          <div className="relative backdrop-blur-sm border border-border p-6 card-glow animate-fadeIn">
             <CornerElements />
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold tracking-tight">
-                <span className="text-primary">Your</span>{" "}
+                <span className="text-primary text-glow">Your</span>{" "}
                 <span className="text-foreground">Fitness Plans</span>
               </h2>
               <div className="font-mono text-xs text-muted-foreground">
@@ -50,19 +60,20 @@ const ProfilePage = () => {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {allPlans.map((plan) => (
+              {allPlans.map((plan, index) => (
                 <Button
                   key={plan._id}
                   onClick={() => setSelectedPlanId(plan._id)}
-                  className={`text-foreground border hover:text-white ${
+                  className={`text-foreground border hover:text-white hover-lift focus-cyber transition-all duration-300 ${
                     selectedPlanId === plan._id
-                      ? "bg-primary/20 text-primary border-primary"
-                      : "bg-transparent border-border hover:border-primary/50"
+                      ? "bg-primary/20 text-primary border-primary animate-pulse-glow"
+                      : "bg-transparent border-border hover:border-primary/50 hover:bg-primary/10"
                   }`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   {plan.name}
                   {plan.isActive && (
-                    <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded">
+                    <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded animate-pulse">
                       ACTIVE
                     </span>
                   )}
@@ -72,15 +83,14 @@ const ProfilePage = () => {
           </div>
 
           {/* PLAN DETAILS */}
-
           {currentPlan && (
-            <div className="relative backdrop-blur-sm border border-border rounded-lg p-6">
+            <div className="relative backdrop-blur-sm border border-border rounded-lg p-6 card-glow animate-fadeIn" style={{ animationDelay: "0.3s" }}>
               <CornerElements />
 
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
                 <h3 className="text-lg font-bold">
-                  PLAN: <span className="text-primary">{currentPlan.name}</span>
+                  PLAN: <span className="text-primary text-glow">{currentPlan.name}</span>
                 </h3>
               </div>
 
@@ -88,7 +98,7 @@ const ProfilePage = () => {
                 <TabsList className="mb-6 w-full grid grid-cols-2 bg-cyber-terminal-bg border">
                   <TabsTrigger
                     value="workout"
-                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary focus-cyber transition-all duration-300"
                   >
                     <DumbbellIcon className="mr-2 size-4" />
                     Workout Plan
@@ -96,17 +106,17 @@ const ProfilePage = () => {
 
                   <TabsTrigger
                     value="diet"
-                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                    className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary focus-cyber transition-all duration-300"
                   >
                     <AppleIcon className="mr-2 h-4 w-4" />
                     Diet Plan
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="workout">
+                <TabsContent value="workout" className="animate-fadeIn">
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <CalendarIcon className="h-4 w-4 text-primary" />
+                      <CalendarIcon className="h-4 w-4 text-primary animate-pulse" />
                       <span className="font-mono text-sm text-muted-foreground">
                         SCHEDULE: {currentPlan.workoutPlan.schedule.join(", ")}
                       </span>
@@ -117,11 +127,12 @@ const ProfilePage = () => {
                         <AccordionItem
                           key={index}
                           value={exerciseDay.day}
-                          className="border rounded-lg overflow-hidden"
+                          className="border rounded-lg overflow-hidden hover-lift card-glow"
+                          style={{ animationDelay: `${index * 0.1}s` }}
                         >
-                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-primary/10 font-mono">
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-primary/10 font-mono transition-all duration-300">
                             <div className="flex justify-between w-full items-center">
-                              <span className="text-primary">{exerciseDay.day}</span>
+                              <span className="text-primary text-glow">{exerciseDay.day}</span>
                               <div className="text-xs text-muted-foreground">
                                 {exerciseDay.routines.length} EXERCISES
                               </div>
@@ -133,17 +144,17 @@ const ProfilePage = () => {
                               {exerciseDay.routines.map((routine, routineIndex) => (
                                 <div
                                   key={routineIndex}
-                                  className="border border-border rounded p-3 bg-background/50"
+                                  className="border border-border rounded p-3 bg-background/50 hover:bg-background/70 transition-colors group"
                                 >
                                   <div className="flex justify-between items-start mb-2">
-                                    <h4 className="font-semibold text-foreground">
+                                    <h4 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                                       {routine.name}
                                     </h4>
                                     <div className="flex items-center gap-2">
-                                      <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-mono">
+                                      <div className="px-2 py-1 rounded bg-primary/20 text-primary text-xs font-mono animate-pulse">
                                         {routine.sets} SETS
                                       </div>
-                                      <div className="px-2 py-1 rounded bg-secondary/20 text-secondary text-xs font-mono">
+                                      <div className="px-2 py-1 rounded bg-secondary/20 text-secondary text-xs font-mono animate-pulse" style={{ animationDelay: "0.5s" }}>
                                         {routine.reps} REPS
                                       </div>
                                     </div>
@@ -163,34 +174,35 @@ const ProfilePage = () => {
                   </div>
                 </TabsContent>
 
-                <TabsContent value="diet">
+                <TabsContent value="diet" className="animate-fadeIn">
                   <div className="space-y-4">
                     <div className="flex justify-between items-center mb-4">
                       <span className="font-mono text-sm text-muted-foreground">
                         DAILY CALORIE TARGET
                       </span>
-                      <div className="font-mono text-xl text-primary">
+                      <div className="font-mono text-xl text-primary text-glow animate-pulse">
                         {currentPlan.dietPlan.dailyCalories} KCAL
                       </div>
                     </div>
 
-                    <div className="h-px w-full bg-border my-4"></div>
+                    <div className="h-px w-full bg-gradient-to-r from-primary via-secondary to-primary opacity-50 my-4"></div>
 
                     <div className="space-y-4">
                       {currentPlan.dietPlan.meals.map((meal, index) => (
                         <div
                           key={index}
-                          className="border border-border rounded-lg overflow-hidden p-4"
+                          className="border border-border rounded-lg overflow-hidden p-4 hover-lift card-glow transition-all duration-300"
+                          style={{ animationDelay: `${index * 0.1}s` }}
                         >
                           <div className="flex items-center gap-2 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-primary"></div>
-                            <h4 className="font-mono text-primary">{meal.name}</h4>
+                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                            <h4 className="font-mono text-primary text-glow">{meal.name}</h4>
                           </div>
                           <ul className="space-y-2">
                             {meal.foods.map((food, foodIndex) => (
                               <li
                                 key={foodIndex}
-                                className="flex items-center gap-2 text-sm text-muted-foreground"
+                                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                               >
                                 <span className="text-xs text-primary font-mono">
                                   {String(foodIndex + 1).padStart(2, "0")}
