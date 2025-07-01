@@ -128,3 +128,51 @@ export const updatePlanName = mutation({
     return { success: true, planId: args.planId };
   },
 });
+
+export const replaceMeal = mutation({
+  args: {
+    userId: v.string(),
+    planId: v.id("plans"),
+    mealIndex: v.number(),
+    newFoods: v.array(v.string()),
+    reasoning: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify plan belongs to user
+    const plan = await ctx.db.get(args.planId);
+    if (!plan || plan.userId !== args.userId) {
+      throw new Error("Plan not found or access denied");
+    }
+
+    // 2. Validate meal index
+    if (args.mealIndex < 0 || args.mealIndex >= plan.dietPlan.meals.length) {
+      throw new Error("Invalid meal index");
+    }
+
+    // 3. Get the current meal to replace
+    const currentMeal = plan.dietPlan.meals[args.mealIndex];
+
+    // 4. Create a new diet plan with the replaced meal
+    const updatedMeals = [...plan.dietPlan.meals];
+    updatedMeals[args.mealIndex] = {
+      name: currentMeal.name,
+      foods: args.newFoods,
+    };
+
+    const updatedDietPlan = {
+      ...plan.dietPlan,
+      meals: updatedMeals,
+    };
+
+    // 5. Update the plan
+    await ctx.db.patch(args.planId, { dietPlan: updatedDietPlan });
+
+    return { 
+      success: true, 
+      planId: args.planId,
+      mealIndex: args.mealIndex,
+      currentMeal: currentMeal,
+      newMeal: updatedMeals[args.mealIndex],
+    };
+  },
+});

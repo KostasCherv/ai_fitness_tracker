@@ -283,3 +283,125 @@ http.route({
 });
 
 export default http;
+
+http.route({
+  path: "/vapi/replace-meal",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const payload = await request.json();
+
+      const {
+        user_id,
+        plan_id,
+        meal_index,
+        user_preferences,
+        current_meal,
+        daily_calories,
+        dietary_restrictions,
+        fitness_goal,
+      } = payload;
+
+
+      const model = genAI.getGenerativeModel({
+        model: "gemini-2.0-flash-001",
+        generationConfig: {
+          temperature: 0.7, // slightly higher for more creative meal suggestions
+          topP: 0.9,
+          responseMimeType: "application/json",
+        },
+      });
+
+      const mealReplacementPrompt = `You are an experienced nutrition coach helping to replace a meal in a personalized diet plan.
+
+      CONTEXT:
+      - Daily calorie target: ${daily_calories} calories
+      - Fitness goal: ${fitness_goal}
+      - Dietary restrictions: ${dietary_restrictions}
+      - Current meal to replace: ${current_meal.name}
+      - Current meal foods: ${current_meal.foods.join(", ")}
+      - User preferences: ${user_preferences}
+
+      TASK:
+      Create a new meal that:
+      1. Maintains similar calorie content to the original meal
+      2. Fits within the daily calorie target
+      3. Respects dietary restrictions
+      4. Aligns with the fitness goal
+      5. Incorporates the user's preferences
+      6. Provides balanced nutrition
+
+      CRITICAL SCHEMA INSTRUCTIONS:
+      - Your output MUST contain ONLY the fields specified below, NO ADDITIONAL FIELDS
+      - Each food item should be a single, complete string (e.g., "Greek Yogurt (1 cup, plain, non-fat)"). Do not split a single food into multiple array elements.
+      - Return a JSON object with this EXACT structure:
+      {
+        "foods": ["Food item 1", "Food item 2", "Food item 3"],
+        "reasoning": "A short explanation of why these foods were chosen."
+      }
+      
+      - Include 3-5 food items that together form a complete meal
+      - Each food item should be specific (e.g., "Grilled chicken breast" not just "chicken")
+      - Consider portion sizes that fit the calorie target
+      - DO NOT add any fields that are not in this example
+      - Your response must be a valid JSON object with no additional text
+
+      
+      Focus on creating a meal that the user will enjoy while maintaining nutritional balance.`;
+
+      const mealResult = await model.generateContent(mealReplacementPrompt);
+
+      const mealText = mealResult.response.text();
+      console.log("Meal text:", mealText);
+      
+
+      // Parse and validate the AI response
+      const newMeal = JSON.parse(mealText);
+
+      
+      // Validate the structure
+      if (!newMeal.foods || !Array.isArray(newMeal.foods)) {
+        throw new Error("Invalid meal structure from AI");
+      }
+
+      // Update the meal in the database with AI-generated foods
+      await ctx.runMutation(api.plans.replaceMeal, {
+        userId: user_id,
+        planId: plan_id,
+        mealIndex: meal_index,
+        newFoods: newMeal.foods,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: {
+            newMeal: {
+              name: current_meal.name,
+              foods: newMeal.foods,
+            },
+            planId: plan_id,
+            mealIndex: meal_index,
+            reasoning: newMeal.reasoning,
+          },
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    } catch (error) {
+      console.error("Error replacing meal:", error);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+    }
+  }),
+});

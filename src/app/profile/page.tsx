@@ -9,9 +9,10 @@ import NoFitnessPlan from "@/components/NoFitnessPlan";
 import CornerElements from "@/components/CornerElements";
 import ActivePlanSelector from "@/components/ActivePlanSelector";
 import InlineEditableTitle from "@/components/InlineEditableTitle";
+import MealReplacer from "@/components/MealReplacer";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
+import { AppleIcon, CalendarIcon, DumbbellIcon, Loader2Icon, CheckIcon, XIcon } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
@@ -19,6 +20,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import LoadingSkeleton from "@/components/LoadingSkeleton";
+import { Textarea } from "@/components/ui/textarea";
 
 const ProfilePage = () => {
   const { user } = useUser();
@@ -26,6 +28,16 @@ const ProfilePage = () => {
 
   const allPlans = useQuery(api.plans.getUserPlans, { userId });
   const [selectedPlanId, setSelectedPlanId] = useState<null | string>(null);
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalMeal, setModalMeal] = useState<{ name: string; foods: string[] } | null>(null);
+  const [modalMealIndex, setModalMealIndex] = useState<number | null>(null);
+  const [modalPreferences, setModalPreferences] = useState("");
+  const [modalLoading, setModalLoading] = useState(false);
+  const [modalError, setModalError] = useState("");
+  const [lastReasoning, setLastReasoning] = useState("");
+  const [lastReasoningMealIndex, setLastReasoningMealIndex] = useState<number | null>(null);
 
   const activePlan = allPlans?.find((plan) => plan.isActive);
 
@@ -35,8 +47,58 @@ const ProfilePage = () => {
 
   // Refresh plans when active plan changes
   const refreshPlans = () => {
-    // Force re-render by updating selected plan
     setSelectedPlanId(null);
+  };
+
+  // Open modal handler
+  const handleOpenMealReplacer = (meal: { name: string; foods: string[] }, mealIndex: number) => {
+    setModalMeal(meal);
+    setModalMealIndex(mealIndex);
+    setModalPreferences("");
+    setModalError("");
+    setModalOpen(true);
+  };
+
+  // Handle meal replacement
+  const handleReplaceMeal = async () => {
+    if (!modalPreferences.trim() || !modalMeal || modalMealIndex === null || !currentPlan) {
+      setModalError("Please enter your preferences.");
+      return;
+    }
+    setModalLoading(true);
+    setModalError("");
+    try {
+      const response = await fetch("/api/replace-meal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          plan_id: currentPlan._id,
+          meal_index: modalMealIndex,
+          user_preferences: modalPreferences,
+          current_meal: modalMeal,
+          daily_calories: currentPlan.dietPlan.dailyCalories,
+          dietary_restrictions: "None",
+          fitness_goal: currentPlan.name.split(" ")[0] || "General Fitness",
+        }),
+      });
+      const data = await response.json();
+      if (data.success) {
+        setModalOpen(false);
+        setModalPreferences("");
+        setModalMeal(null);
+        setModalMealIndex(null);
+        setLastReasoning(data.data?.reasoning || "");
+        setLastReasoningMealIndex(modalMealIndex);
+        refreshPlans();
+      } else {
+        setModalError(data.error || "Failed to replace meal");
+      }
+    } catch {
+      setModalError("An error occurred while replacing the meal");
+    } finally {
+      setModalLoading(false);
+    }
   };
 
   // Loading state
@@ -214,12 +276,19 @@ const ProfilePage = () => {
                       {currentPlan.dietPlan.meals.map((meal, index) => (
                         <div
                           key={index}
-                          className="border border-border rounded-lg overflow-hidden p-4 hover-lift card-glow transition-all duration-300"
+                          className="relative border border-border rounded-lg overflow-hidden p-4 hover-lift card-glow transition-all duration-300"
                           style={{ animationDelay: `${index * 0.1}s` }}
                         >
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                            <h4 className="font-mono text-primary text-glow">{meal.name}</h4>
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+                              <h4 className="font-mono text-primary text-glow">{meal.name}</h4>
+                            </div>
+                            <MealReplacer
+                              meal={meal}
+                              mealIndex={index}
+                              onOpen={handleOpenMealReplacer}
+                            />
                           </div>
                           <ul className="space-y-2">
                             {meal.foods.map((food, foodIndex) => (
@@ -234,6 +303,23 @@ const ProfilePage = () => {
                               </li>
                             ))}
                           </ul>
+                          {lastReasoningMealIndex === index && lastReasoning && (
+                            <div className="text-sm bg-primary/10 border border-primary/30 rounded p-3 mt-4 text-primary flex items-start justify-between gap-2">
+                              <div>
+                                <strong>Why this meal?</strong><br />
+                                {lastReasoning}
+                              </div>
+                              <button
+                                className="ml-4 text-xs text-primary underline hover:text-primary/80"
+                                onClick={() => {
+                                  setLastReasoning("");
+                                  setLastReasoningMealIndex(null);
+                                }}
+                              >
+                                Hide
+                              </button>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -245,6 +331,79 @@ const ProfilePage = () => {
         </div>
       ) : (
         <NoFitnessPlan />
+      )}
+
+      {/* Modal for meal replacement */}
+      {modalOpen && (
+        <div
+          className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center"
+          onClick={() => setModalOpen(false)}
+        >
+          <div
+            className="bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg p-6 w-full max-w-md mx-auto relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-medium text-foreground">Replace {modalMeal?.name}</h4>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setModalOpen(false)}
+                className="h-6 w-6 p-0"
+              >
+                <XIcon className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="space-y-2 mb-3">
+              <label className="text-sm text-muted-foreground">
+                What would you prefer instead?
+              </label>
+              <Textarea
+                placeholder="e.g., I prefer Italian food, I'm allergic to nuts, I want something quick to prepare..."
+                value={modalPreferences}
+                onChange={e => setModalPreferences(e.target.value)}
+                className="min-h-[80px] text-sm"
+                disabled={modalLoading}
+              />
+            </div>
+            {modalError && (
+              <div className="text-sm text-red-500 bg-red-500/10 p-2 rounded mb-3">
+                {modalError}
+              </div>
+            )}
+            <div className="flex gap-2 mb-3">
+              <Button
+                onClick={handleReplaceMeal}
+                disabled={modalLoading || !modalPreferences.trim()}
+                className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground"
+                size="sm"
+              >
+                {modalLoading ? (
+                  <>
+                    <Loader2Icon className="w-3 h-3 mr-1 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <CheckIcon className="w-3 h-3 mr-1" />
+                    Replace Meal
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setModalOpen(false)}
+                disabled={modalLoading}
+                size="sm"
+              >
+                Cancel
+              </Button>
+            </div>
+            <div className="text-xs text-muted-foreground bg-muted/50 p-2 rounded mb-2">
+              <strong>Current meal:</strong> {modalMeal?.foods.join(", ")}
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
