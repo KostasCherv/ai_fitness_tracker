@@ -103,3 +103,28 @@ export const getActivePlan = query({
     return activePlan;
   },
 });
+
+export const updatePlanName = mutation({
+  args: {
+    userId: v.string(),
+    planId: v.id("plans"),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // 1. Verify plan belongs to user
+    const plan = await ctx.db.get(args.planId);
+    if (!plan || plan.userId !== args.userId) {
+      throw new Error("Plan not found or access denied");
+    }
+
+    // 2. Validate name
+    if (!args.name.trim()) {
+      throw new Error("Plan name cannot be empty");
+    }
+
+    // 3. Update plan name
+    await ctx.db.patch(args.planId, { name: args.name.trim() });
+
+    return { success: true, planId: args.planId };
+  },
+});

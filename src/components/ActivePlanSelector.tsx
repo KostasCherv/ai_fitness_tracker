@@ -7,6 +7,7 @@ import { useState } from "react";
 import { CheckIcon, Loader2Icon, ZapIcon } from "lucide-react";
 import CornerElements from "./CornerElements";
 import PlanNotification from "./PlanNotification";
+import InlineEditableTitle from "@/components/InlineEditableTitle";
 
 interface ActivePlanSelectorProps {
   userId: string;
@@ -84,7 +85,13 @@ const ActivePlanSelector = ({ userId, plans, onPlanChange }: ActivePlanSelectorP
 
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-semibold text-foreground text-lg">{plan.name}</h4>
+                  <InlineEditableTitle
+                    planId={plan._id}
+                    userId={userId}
+                    initialTitle={plan.name}
+                    onUpdate={onPlanChange}
+                    className="text-lg"
+                  />
                   <p className="text-sm text-muted-foreground">
                     {plan.workoutPlan.exercises.length} workout days
                   </p>

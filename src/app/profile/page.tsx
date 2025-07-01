@@ -8,6 +8,7 @@ import ProfileHeader from "@/components/ProfileHeader";
 import NoFitnessPlan from "@/components/NoFitnessPlan";
 import CornerElements from "@/components/CornerElements";
 import ActivePlanSelector from "@/components/ActivePlanSelector";
+import InlineEditableTitle from "@/components/InlineEditableTitle";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
@@ -104,9 +105,16 @@ const ProfilePage = () => {
 
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
-                <h3 className="text-lg font-bold">
-                  PLAN: <span className="text-primary text-glow">{currentPlan.name}</span>
-                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-lg font-bold text-foreground">PLAN:</span>
+                  <InlineEditableTitle
+                    planId={currentPlan._id}
+                    userId={userId}
+                    initialTitle={currentPlan.name}
+                    onUpdate={refreshPlans}
+                    className="text-lg"
+                  />
+                </div>
               </div>
 
               <Tabs defaultValue="workout" className="w-full">
