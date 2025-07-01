@@ -7,6 +7,7 @@ import { useState } from "react";
 import ProfileHeader from "@/components/ProfileHeader";
 import NoFitnessPlan from "@/components/NoFitnessPlan";
 import CornerElements from "@/components/CornerElements";
+import ActivePlanSelector from "@/components/ActivePlanSelector";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppleIcon, CalendarIcon, DumbbellIcon } from "lucide-react";
@@ -31,6 +32,12 @@ const ProfilePage = () => {
     ? allPlans?.find((plan) => plan._id === selectedPlanId)
     : activePlan;
 
+  // Refresh plans when active plan changes
+  const refreshPlans = () => {
+    // Force re-render by updating selected plan
+    setSelectedPlanId(null);
+  };
+
   // Loading state
   if (allPlans === undefined) {
     return (
@@ -46,39 +53,47 @@ const ProfilePage = () => {
 
       {allPlans && allPlans?.length > 0 ? (
         <div className="space-y-8">
-          {/* PLAN SELECTOR */}
+          {/* ACTIVE PLAN SELECTOR */}
           <div className="relative backdrop-blur-sm border border-border p-6 card-glow animate-fadeIn">
             <CornerElements />
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold tracking-tight">
-                <span className="text-primary text-glow">Your</span>{" "}
-                <span className="text-foreground">Fitness Plans</span>
-              </h2>
-              <div className="font-mono text-xs text-muted-foreground">
-                TOTAL: {allPlans.length}
+            <ActivePlanSelector 
+              userId={userId}
+              plans={allPlans || []}
+              onPlanChange={refreshPlans}
+            />
+            
+            {/* PLAN VIEW SELECTOR */}
+            <div className="mt-8 pt-6 border-t border-border">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-foreground">
+                  <span className="text-primary text-glow">View</span> Plans
+                </h4>
+                <div className="font-mono text-xs text-muted-foreground">
+                  TOTAL: {allPlans.length}
+                </div>
               </div>
-            </div>
 
-            <div className="flex flex-wrap gap-2">
-              {allPlans.map((plan, index) => (
-                <Button
-                  key={plan._id}
-                  onClick={() => setSelectedPlanId(plan._id)}
-                  className={`text-foreground border hover:text-white hover-lift focus-cyber transition-all duration-300 ${
-                    selectedPlanId === plan._id
-                      ? "bg-primary/20 text-primary border-primary animate-pulse-glow"
-                      : "bg-transparent border-border hover:border-primary/50 hover:bg-primary/10"
-                  }`}
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {plan.name}
-                  {plan.isActive && (
-                    <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded animate-pulse">
-                      ACTIVE
-                    </span>
-                  )}
-                </Button>
-              ))}
+              <div className="flex flex-wrap gap-2">
+                {allPlans.map((plan, index) => (
+                  <Button
+                    key={plan._id}
+                    onClick={() => setSelectedPlanId(plan._id)}
+                    className={`text-foreground border hover:text-white hover-lift focus-cyber transition-all duration-300 ${
+                      selectedPlanId === plan._id
+                        ? "bg-primary/20 text-primary border-primary animate-pulse-glow"
+                        : "bg-transparent border-border hover:border-primary/50 hover:bg-primary/10"
+                    }`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                  >
+                    {plan.name}
+                    {plan.isActive && (
+                      <span className="ml-2 bg-green-500/20 text-green-500 text-xs px-2 py-0.5 rounded animate-pulse">
+                        ACTIVE
+                      </span>
+                    )}
+                  </Button>
+                ))}
+              </div>
             </div>
           </div>
 

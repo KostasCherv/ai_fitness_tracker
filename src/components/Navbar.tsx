@@ -4,9 +4,10 @@ import { SignInButton, SignUpButton, UserButton, useUser } from "@clerk/nextjs";
 import { DumbbellIcon, HomeIcon, UserIcon, ZapIcon } from "lucide-react";
 import Link from "next/link";
 import { Button } from "./ui/button";
+import QuickPlanSwitcher from "./QuickPlanSwitcher";
 
 const Navbar = () => {
-  const { isSignedIn } = useUser();
+  const { isSignedIn, user } = useUser();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-md border-b border-border py-3 animate-fadeIn">
@@ -48,6 +49,9 @@ const Navbar = () => {
                 <UserIcon size={16} className="group-hover:animate-pulse" />
                 <span>Profile</span>
               </Link>
+              
+              <QuickPlanSwitcher userId={user?.id || ""} />
+              
               <Button
                 asChild
                 variant="outline"
